@@ -1,97 +1,32 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: 'Introdução'
+description: 'Documentação da API Manybot'
 ---
 
-## Setting up
+# API Manybot
 
-Get your documentation site up and running in minutes.
+Bem-vindo à documentação da API Manybot! Esta API permite que você integre e gerencie sua conta.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+Estamos adicionando endpoints conforme a necessidade, se você precisar de algo específico, entre em contato conosco.
 
-## Make it yours
+## Estrutura da API
 
-Design a docs site that looks great and empowers your users.
+A API está organizada em duas seções principais:
 
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+### 📨 Messages
+Endpoints para envio de mensagens através dos canais conectados:
+- **Send Text Message** - Enviar mensagens de texto
 
-## Create beautiful pages
+### 📱 Channels  
+Endpoints para gerenciamento de canais de comunicação:
+- **List Channels** - Listar todos os canais da empresa
+- **Connect WhatsApp** - Conectar novo canal WhatsApp
+- **Disconnect Channel** - Remover canal específico
 
-Everything you need to create world-class documentation.
+## Autenticação
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+Todos os endpoints da API requerem autenticação via API Key no header:
 
-## Need inspiration?
+Para usar a API, inclua o header `x-api-key` com sua chave de API em todas as requisições.
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+Para obter sua chave de API, acesse sua conta [App Manybot](https://app2.manybot.com.br) e clique em "Configurações" -> "Chaves de API".
