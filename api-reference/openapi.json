@@ -1,216 +1,348 @@
 {
-  "openapi": "3.1.0",
+  "openapi": "3.0.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
-    "version": "1.0.0"
+    "title": "API Manybot",
+    "description": "",
+    "version": "v1.0.0",
+    "contact": {}
   },
+  "tags": [],
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://api-v2.manybot.com.br"
     }
   ],
   "security": [
     {
-      "bearerAuth": []
+      "x-api-key": ["x-api-key"]
     }
   ],
   "paths": {
-    "/plants": {
-      "get": {
-        "description": "Returns all plants from the system that the user has access to",
+    "/messages/send-text": {
+      "post": {
+        "operationId": "MessageController_sendTextMessage",
         "parameters": [
           {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
+            "name": "channel-id",
+            "in": "header",
+            "description": "ID do canal conectado",
+            "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "string"
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "description": "Dados para enviar uma mensagem de texto",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendTextRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Messages"]
+      }
+    },
+    "/channels": {
+      "get": {
+        "operationId": "ChannelsController_findAllByCompany",
+        "summary": "Listar canais da empresa",
+        "description": "Retorna todos os canais da empresa.",
+        "parameters": [],
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "Lista de canais retornada com sucesso",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Plant"
+                    "$ref": "#/components/schemas/ChannelResponseDTO"
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "Unexpected error",
+          "401": {
+            "description": "Não autorizado",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
                 }
               }
             }
           }
-        }
-      },
+        },
+        "tags": ["Channels"]
+      }
+    },
+    "/channels/connect-whatsapp": {
       "post": {
-        "description": "Creates a new plant in the store",
+        "operationId": "ChannelsController_connect",
+        "summary": "Conectar canal WhatsApp",
+        "description": "Conecta um novo canal WhatsApp à empresa.",
+        "parameters": [],
         "requestBody": {
-          "description": "Plant to add to the store",
+          "required": true,
+          "description": "Dados para conectar o canal WhatsApp, caso não passe o phone, será gerado um QR Code para conexão.",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "$ref": "#/components/schemas/ConnectWhatsappDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
-          "200": {
-            "description": "plant response",
+          "201": {
+            "description": "Canal WhatsApp conectado com sucesso",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Plant"
+                  "$ref": "#/components/schemas/ChannelResponseDTO"
                 }
               }
             }
           },
           "400": {
-            "description": "unexpected error",
+            "description": "Dados inválidos fornecidos",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invalid phone number format"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Canal já existe para este número",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 409
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Channel already exists for this phone number"
+                    }
+                  }
                 }
               }
             }
           }
-        }
+        },
+        "tags": ["Channels"]
       }
     },
-    "/plants/{id}": {
+    "/channels/{id}": {
       "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+        "operationId": "ChannelsController_disconnected",
+        "summary": "Desconectar canal",
+        "description": "Desconecta um canal específico da empresa.",
         "parameters": [
           {
             "name": "id",
-            "in": "path",
-            "description": "ID of plant to delete",
             "required": true,
+            "in": "path",
+            "description": "ID único do canal a ser desconectado",
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "example": "clh1234567890",
+              "type": "string"
             }
           }
         ],
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
-          },
-          "400": {
-            "description": "unexpected error",
+          "200": {
+            "description": "Canal desconectado com sucesso",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ChannelResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 401
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Canal não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Channel not found"
+                    }
+                  }
                 }
               }
             }
           }
-        }
-      }
-    }
-  },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
-        "requestBody": {
-          "description": "Plant added to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          }
         },
-        "responses": {
-          "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
-          }
-        }
+        "tags": ["Channels"]
       }
     }
   },
   "components": {
-    "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
-          },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
-          }
-        }
-      },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
-          },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
-            }
-          }
-        ]
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
+    "securitySchemes": {
+      "x-api-key": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header",
+        "description": "API Key da sua conta"
       }
     },
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+    "schemas": {
+      "SendTextRequestDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Mensagem a ser enviada",
+            "example": "Olá, como vai?"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Número do destinatário (formato internacional)",
+            "example": "+5511999999999"
+          }
+        },
+        "required": ["message", "phone"]
+      },
+      "QrCodeInterface": {
+        "type": "object",
+        "properties": {
+          "base64": {
+            "type": "string",
+            "description": "QR Code em base64",
+            "example": "iVBORw0KGgoAAAANSUhEUgAA..."
+          }
+        },
+        "required": ["base64"]
+      },
+      "ChannelResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID único do canal",
+            "example": "clh1234567890"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome do canal",
+            "example": "Canal WhatsApp Principal"
+          },
+          "companyId": {
+            "type": "string",
+            "description": "ID da empresa proprietária do canal",
+            "example": "clh9876543210"
+          },
+          "connectionStatus": {
+            "type": "string",
+            "description": "Status da conexão do canal",
+            "example": "connected",
+            "enum": ["open", "close", "connecting", "refused", "qrcode_limit_scan"]
+          },
+          "type": {
+            "type": "string",
+            "description": "Tipo do canal",
+            "example": "whatsapp",
+            "enum": ["whatsapp", "telegram", "instagram"]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Data de criação do canal",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Número do telefone conectado",
+            "example": "+5511999999999"
+          },
+          "qrcode": {
+            "description": "QR Code para conexão",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QrCodeInterface"
+              }
+            ]
+          },
+          "paircode": {
+            "type": "string",
+            "description": "Código de pareamento",
+            "example": "ABC123XYZ"
+          }
+        },
+        "required": ["id", "companyId", "connectionStatus", "type", "createdAt"]
+      },
+      "ConnectWhatsappDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "description": "Número do telefone para conectar ao WhatsApp",
+            "example": "+5511999999999"
+          }
+        }
       }
     }
   }

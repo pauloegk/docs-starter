@@ -1,33 +1,32 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: 'Introdução'
+description: 'Documentação da API Manybot'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+# API Manybot
 
-## Welcome
+Bem-vindo à documentação da API Manybot! Esta API permite que você integre e gerencie sua conta.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+Estamos adicionando endpoints conforme a necessidade, se você precisar de algo específico, entre em contato conosco.
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+## Estrutura da API
 
-## Authentication
+A API está organizada em duas seções principais:
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+### 📨 Messages
+Endpoints para envio de mensagens através dos canais conectados:
+- **Send Text Message** - Enviar mensagens de texto
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
-```
+### 📱 Channels  
+Endpoints para gerenciamento de canais de comunicação:
+- **List Channels** - Listar todos os canais da empresa
+- **Connect WhatsApp** - Conectar novo canal WhatsApp
+- **Disconnect Channel** - Remover canal específico
+
+## Autenticação
+
+Todos os endpoints da API requerem autenticação via API Key no header:
+
+Para usar a API, inclua o header `x-api-key` com sua chave de API em todas as requisições.
+
+Para obter sua chave de API, acesse sua conta [App Manybot](https://app2.manybot.com.br) e clique em "Configurações" -> "Chaves de API".
