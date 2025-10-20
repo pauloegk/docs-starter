@@ -25,8 +25,8 @@ Endpoints para gerenciamento de canais de comunicação:
 
 ## Autenticação
 
-Todos os endpoints da API requerem autenticação via API Key no header:
+Todos os endpoints da API requerem autenticação via JWT no header:
 
-Para usar a API, inclua o header `x-api-key` com sua chave de API em todas as requisições.
+Para usar a API, inclua o header `Authorization` com o valor `Bearer {seu-jwt-token}` em todas as requisições.
 
-Para obter sua chave de API, acesse sua conta [App Manybot](https://app2.manybot.com.br) e clique em "Configurações" -> "Chaves de API".
+Para obter seu token JWT, acesse sua conta [App Manybot](https://app2.manybot.com.br) e clique em "Configurações" -> "Chaves de API".

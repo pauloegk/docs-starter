@@ -14,7 +14,7 @@
   ],
   "security": [
     {
-      "x-api-key": ["x-api-key"]
+      "bearer": []
     }
   ],
   "paths": {
@@ -54,7 +54,7 @@
     "/channels": {
       "get": {
         "operationId": "ChannelsController_findAllByCompany",
-        "summary": "Listar canais da empresa",
+        "summary": "List channels",
         "description": "Retorna todos os canais da empresa.",
         "parameters": [],
         "responses": {
@@ -242,11 +242,11 @@
   },
   "components": {
     "securitySchemes": {
-      "x-api-key": {
-        "type": "apiKey",
-        "name": "x-api-key",
-        "in": "header",
-        "description": "API Key da sua conta"
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token JWT da sua conta. Use o formato: Bearer {seu-jwt-token}"
       }
     },
     "schemas": {
