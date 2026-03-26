@@ -51,6 +51,72 @@
         "tags": ["Messages"]
       }
     },
+    "/messages/send-media": {
+      "post": {
+        "operationId": "MessageController_sendMediaMessage",
+        "parameters": [
+          {
+            "name": "channel-id",
+            "in": "header",
+            "description": "ID do canal conectado",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Dados para enviar uma mensagem de mídia via URL",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMediaRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Messages"]
+      }
+    },
+    "/messages/send-audio": {
+      "post": {
+        "operationId": "MessageController_sendAudioMessage",
+        "parameters": [
+          {
+            "name": "channel-id",
+            "in": "header",
+            "description": "ID do canal conectado",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Dados para enviar uma mensagem de áudio via URL",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendAudioRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Messages"]
+      }
+    },
     "/channels": {
       "get": {
         "operationId": "ChannelsController_findAllByCompany",
@@ -265,6 +331,59 @@
           }
         },
         "required": ["message", "phone"]
+      },
+      "SendMediaRequestDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "description": "Número do destinatário (formato internacional)",
+            "example": "+5511999999999"
+          },
+          "mediaUrl": {
+            "type": "string",
+            "description": "URL pública do arquivo de mídia (não é upload)",
+            "example": "https://cdn.seudominio.com/arquivo.jpg"
+          },
+          "mediatype": {
+            "type": "string",
+            "description": "Tipo da mídia",
+            "enum": ["image", "document", "video"],
+            "example": "image"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Legenda opcional da mídia",
+            "example": "Segue o catálogo atualizado"
+          },
+          "fileName": {
+            "type": "string",
+            "description": "Nome do arquivo (recomendado para document)",
+            "example": "catalogo.pdf"
+          },
+          "mimetype": {
+            "type": "string",
+            "description": "MIME type (ex: image/jpeg, application/pdf)",
+            "example": "image/jpeg"
+          }
+        },
+        "required": ["phone", "mediaUrl", "mediatype"]
+      },
+      "SendAudioRequestDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "description": "Número do destinatário (formato internacional)",
+            "example": "+5511999999999"
+          },
+          "audioUrl": {
+            "type": "string",
+            "description": "URL pública do áudio (será baixado e enviado)",
+            "example": "https://cdn.seudominio.com/audio.mp3"
+          }
+        },
+        "required": ["phone", "audioUrl"]
       },
       "QrCodeInterface": {
         "type": "object",
