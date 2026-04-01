@@ -23,7 +23,9 @@
             "group": "Messages",
             "pages": [
               "api-reference/messages/index",
-              "api-reference/messages/send-text"
+              "api-reference/messages/send-text",
+              "api-reference/messages/send-media",
+              "api-reference/messages/send-audio"
             ]
           },
           {
