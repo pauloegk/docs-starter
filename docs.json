@@ -49,7 +49,7 @@
         },
         {
           "anchor": "App",
-          "href": "https://app2.manybot.com.br",
+          "href": "https://crm.manybot.com.br",
           "icon": "book-open"
         },
         {
@@ -68,7 +68,7 @@
     "primary": {
       "type": "button",
       "label": "Acessar",
-      "href": "https://app2.manybot.com.br"
+      "href": "https://crm.manybot.com.br"
     }
   }
 }
