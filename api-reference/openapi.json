@@ -21,17 +21,7 @@
     "/messages/send-text": {
       "post": {
         "operationId": "MessageController_sendTextMessage",
-        "parameters": [
-          {
-            "name": "channel-id",
-            "in": "header",
-            "description": "ID do canal conectado",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "description": "Dados para enviar uma mensagem de texto",
@@ -54,17 +44,7 @@
     "/messages/send-media": {
       "post": {
         "operationId": "MessageController_sendMediaMessage",
-        "parameters": [
-          {
-            "name": "channel-id",
-            "in": "header",
-            "description": "ID do canal conectado",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "description": "Dados para enviar uma mensagem de mídia via URL",
@@ -87,17 +67,7 @@
     "/messages/send-audio": {
       "post": {
         "operationId": "MessageController_sendAudioMessage",
-        "parameters": [
-          {
-            "name": "channel-id",
-            "in": "header",
-            "description": "ID do canal conectado",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "description": "Dados para enviar uma mensagem de áudio via URL",
@@ -319,6 +289,11 @@
       "SendTextRequestDto": {
         "type": "object",
         "properties": {
+          "channelId": {
+            "type": "string",
+            "description": "ID do canal conectado",
+            "example": "clh1234567890"
+          },
           "message": {
             "type": "string",
             "description": "Mensagem a ser enviada",
@@ -330,11 +305,16 @@
             "example": "+5511999999999"
           }
         },
-        "required": ["message", "phone"]
+        "required": ["channelId", "message", "phone"]
       },
       "SendMediaRequestDto": {
         "type": "object",
         "properties": {
+          "channelId": {
+            "type": "string",
+            "description": "ID do canal conectado",
+            "example": "clh1234567890"
+          },
           "phone": {
             "type": "string",
             "description": "Número do destinatário (formato internacional)",
@@ -367,11 +347,16 @@
             "example": "image/jpeg"
           }
         },
-        "required": ["phone", "mediaUrl", "mediatype"]
+        "required": ["channelId", "phone", "mediaUrl", "mediatype"]
       },
       "SendAudioRequestDto": {
         "type": "object",
         "properties": {
+          "channelId": {
+            "type": "string",
+            "description": "ID do canal conectado",
+            "example": "clh1234567890"
+          },
           "phone": {
             "type": "string",
             "description": "Número do destinatário (formato internacional)",
@@ -383,7 +368,7 @@
             "example": "https://cdn.seudominio.com/audio.mp3"
           }
         },
-        "required": ["phone", "audioUrl"]
+        "required": ["channelId", "phone", "audioUrl"]
       },
       "QrCodeInterface": {
         "type": "object",
