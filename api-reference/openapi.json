@@ -87,6 +87,182 @@
         "tags": ["Messages"]
       }
     },
+    "/messages/send-template": {
+      "post": {
+        "operationId": "MessageController_sendTemplateMessage",
+        "summary": "Enviar template de mensagem",
+        "description": "Envia um template aprovado na Meta. O backend busca a estrutura do template automaticamente e monta os parâmetros (components) a partir dos valores informados.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Dados para enviar um template de mensagem aprovado na Meta",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendTemplateRequestDto"
+              },
+              "examples": {
+                "Named params (variáveis nomeadas)": {
+                  "summary": "Template com variáveis nomeadas",
+                  "description": "Usa nomes de variáveis como contact_first_name, contact_email, etc.",
+                  "value": {
+                    "channelId": "clh1234567890",
+                    "phone": "+5511999999999",
+                    "templateName": "confirmacao_pedido",
+                    "language": "pt_BR",
+                    "params": {
+                      "contact_first_name": "João",
+                      "contact_email": "joao@email.com"
+                    }
+                  }
+                },
+                "Positional params (variáveis posicionais)": {
+                  "summary": "Template com variáveis posicionais",
+                  "description": "Usa índices numéricos \"1\", \"2\", \"3\" como chave dos parâmetros.",
+                  "value": {
+                    "channelId": "clh1234567890",
+                    "phone": "+5511999999999",
+                    "templateName": "status_pedido",
+                    "language": "pt_BR",
+                    "params": {
+                      "1": "João",
+                      "2": "12345",
+                      "3": "Enviado"
+                    }
+                  }
+                },
+                "Header de imagem": {
+                  "summary": "Template com header de imagem",
+                  "description": "Envia um template que possui header do tipo IMAGE com a URL da imagem.",
+                  "value": {
+                    "channelId": "clh1234567890",
+                    "phone": "+5511999999999",
+                    "templateName": "promo_banner",
+                    "language": "pt_BR",
+                    "params": {
+                      "contact_first_name": "Maria"
+                    },
+                    "header": {
+                      "imageUrl": "https://cdn.seudominio.com/banner.jpg"
+                    }
+                  }
+                },
+                "Header de vídeo": {
+                  "summary": "Template com header de vídeo",
+                  "description": "Envia um template que possui header do tipo VIDEO com a URL do vídeo.",
+                  "value": {
+                    "channelId": "clh1234567890",
+                    "phone": "+5511999999999",
+                    "templateName": "tutorial_produto",
+                    "language": "pt_BR",
+                    "params": {
+                      "contact_first_name": "Carlos"
+                    },
+                    "header": {
+                      "videoUrl": "https://cdn.seudominio.com/tutorial.mp4"
+                    }
+                  }
+                },
+                "Header de documento": {
+                  "summary": "Template com header de documento",
+                  "description": "Envia um template que possui header do tipo DOCUMENT com URL e nome do arquivo.",
+                  "value": {
+                    "channelId": "clh1234567890",
+                    "phone": "+5511999999999",
+                    "templateName": "envio_contrato",
+                    "language": "pt_BR",
+                    "params": {
+                      "contact_first_name": "Ana"
+                    },
+                    "header": {
+                      "documentUrl": "https://cdn.seudominio.com/contrato.pdf",
+                      "documentFilename": "contrato.pdf"
+                    }
+                  }
+                },
+                "Botão de URL dinâmico": {
+                  "summary": "Template com botão de URL dinâmico",
+                  "description": "Usa button_url_0 para preencher o sufixo dinâmico do botão de URL do template.",
+                  "value": {
+                    "channelId": "clh1234567890",
+                    "phone": "+5511999999999",
+                    "templateName": "rastreio_pedido",
+                    "language": "pt_BR",
+                    "params": {
+                      "contact_first_name": "Pedro",
+                      "button_url_0": "pedido/12345"
+                    }
+                  }
+                },
+                "Sem parâmetros": {
+                  "summary": "Template sem variáveis",
+                  "description": "Template simples que não possui variáveis no body nem header de mídia.",
+                  "value": {
+                    "channelId": "clh1234567890",
+                    "phone": "+5511999999999",
+                    "templateName": "boas_vindas",
+                    "language": "pt_BR"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Template enviado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendTemplateResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Template não está aprovado ou dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Template \"meu_template\" não está aprovado (status: REJECTED)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template não encontrado na Meta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Template \"meu_template\" (pt_BR) não encontrado"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Messages"]
+      }
+    },
     "/channels": {
       "get": {
         "operationId": "ChannelsController_findAllByCompany",
@@ -437,6 +613,104 @@
           }
         },
         "required": ["id", "companyId", "connectionStatus", "type", "createdAt"]
+      },
+      "SendTemplateRequestDto": {
+        "type": "object",
+        "properties": {
+          "channelId": {
+            "type": "string",
+            "description": "ID do canal para envio.",
+            "example": "clh1234567890"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Número do destinatário (formato internacional).",
+            "example": "+5511999999999"
+          },
+          "templateName": {
+            "type": "string",
+            "description": "Nome do template aprovado na Meta.",
+            "example": "confirmacao_pedido"
+          },
+          "language": {
+            "type": "string",
+            "description": "Código do idioma do template.",
+            "example": "pt_BR"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Parâmetros de variáveis do template. Chave = nome da variável (ex: contact_first_name), valor = texto. Para templates posicionais use \"1\", \"2\", etc. Para botões de URL dinâmico use \"button_url_0\", \"button_url_1\", etc.",
+            "example": {
+              "contact_first_name": "João",
+              "contact_email": "joao@email.com"
+            }
+          },
+          "header": {
+            "description": "Mídia do header do template. Informe apenas um dos campos: imageUrl, videoUrl ou documentUrl.",
+            "$ref": "#/components/schemas/TemplateHeaderDto"
+          }
+        },
+        "required": ["channelId", "phone", "templateName", "language"]
+      },
+      "TemplateHeaderDto": {
+        "type": "object",
+        "description": "Mídia do header do template. Informe apenas um dos campos: imageUrl, videoUrl ou documentUrl.",
+        "properties": {
+          "imageUrl": {
+            "type": "string",
+            "description": "URL da imagem para templates com header de imagem.",
+            "example": "https://cdn.seudominio.com/banner.jpg"
+          },
+          "videoUrl": {
+            "type": "string",
+            "description": "URL do vídeo para templates com header de vídeo.",
+            "example": "https://cdn.seudominio.com/video.mp4"
+          },
+          "documentUrl": {
+            "type": "string",
+            "description": "URL do documento para templates com header de documento.",
+            "example": "https://cdn.seudominio.com/contrato.pdf"
+          },
+          "documentFilename": {
+            "type": "string",
+            "description": "Nome do arquivo para header de documento (opcional, usado junto com documentUrl).",
+            "example": "contrato.pdf"
+          }
+        }
+      },
+      "SendTemplateResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Indica se o envio foi bem-sucedido.",
+            "example": true
+          },
+          "chatId": {
+            "type": "string",
+            "description": "ID interno do chat.",
+            "example": "clh0987654321"
+          },
+          "externalChatId": {
+            "type": "string",
+            "description": "ID externo do chat (número do WhatsApp).",
+            "example": "5511999999999@s.whatsapp.net"
+          },
+          "wamid": {
+            "type": "string",
+            "description": "WhatsApp Message ID retornado pela Meta.",
+            "example": "wamid.HBgNNTUxMTk5OTk5OTk5FQIAERgSQjYxNzc2..."
+          },
+          "message": {
+            "type": "string",
+            "description": "Mensagem de confirmação.",
+            "example": "Template enviado com sucesso"
+          }
+        },
+        "required": ["success", "chatId", "externalChatId", "message"]
       },
       "ConnectWhatsappDto": {
         "type": "object",
