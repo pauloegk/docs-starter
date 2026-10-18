@@ -1,0 +1,99 @@
+---
+title: "Flows via Template"
+description: "Como disparar um WhatsApp Flow com dados pré-preenchidos e receber a resposta"
+---
+
+Guia para disparar um **WhatsApp Flow** de forma proativa via template, pré-preenchendo o flow com os seus dados, e receber a resposta do contato de volta.
+
+Os exemplos abaixo usam um flow de **agendamento**: o contato recebe os horários disponíveis, escolhe um e confirma. O mesmo contrato vale para qualquer flow (pesquisas, cadastros, confirmações etc.).
+
+## Visão geral
+
+1. Você chama **[Send Template](/api-reference/messages/send-template)** com um template que tem botão de Flow, passando os dados do flow em `flowData` e os seus identificadores em `metadata`.
+2. O contato recebe a mensagem, abre o flow, preenche e envia.
+3. A resposta chega por **webhook** (evento `FLOW_RESPONSE`), com os campos preenchidos e o mesmo `metadata` enviado.
+
+<Info>
+São **dois conjuntos de dados** no mesmo envio: as variáveis do **template** vão em `params` (preenchem `{{1}}` no texto); os dados do **flow** vão em `flowData` (alimentam as telas do flow).
+</Info>
+
+## Montando o `flowData`
+
+O `flowData` não tem campos fixos: ele segue a estrutura que o **seu flow** espera. Cada placeholder `${data.campo}` do flow é substituído pelo valor de mesmo nome enviado em `flowData`.
+
+Para o flow de agendamento do exemplo:
+
+| Campo | Tipo | Uso no flow |
+| --- | --- | --- |
+| `agendamentoId` | string | Identificador do agendamento. Repassado ao submit para voltar na resposta. |
+| `nome` | string | Saudação na tela (`Olá, ${data.nome}`). |
+| `servico` | string | Nome do serviço exibido no topo da tela. |
+| `horarios` | array | Opções de um `Dropdown`/`RadioButtonsGroup`, no formato `[{ "id": "...", "title": "..." }]`. |
+
+<Note>
+- `flowData` é o **dataset completo**, enviado de uma vez. Os dados entram pela **tela de entrada** e, em flows multi-tela, são repassados internamente para as telas seguintes — você não divide o `flowData` por tela.
+- Os nomes e tipos precisam bater **exatamente** com o que o flow declara; caso contrário, a Meta rejeita o envio.
+- O `__example__` do flow serve só para o preview do Builder, não para produção.
+</Note>
+
+## Exemplo de envio
+
+```bash
+curl -X POST https://api-v2.manybot.com.br/messages/send-template \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channelId": "clh1234567890",
+    "phone": "+5511999999999",
+    "templateName": "agendamento_consulta",
+    "language": "pt_BR",
+    "params": { "contact_first_name": "Maria" },
+    "metadata": { "agendamentoId": "AG-1024", "clienteId": "c_789" },
+    "flowData": {
+      "agendamentoId": "AG-1024",
+      "nome": "Maria",
+      "servico": "Consulta de rotina",
+      "horarios": [
+        { "id": "2026-11-03T09:00", "title": "03/11 · 09:00" },
+        { "id": "2026-11-03T14:00", "title": "03/11 · 14:00" },
+        { "id": "2026-11-04T10:00", "title": "04/11 · 10:00" }
+      ]
+    }
+  }'
+```
+
+## Resposta (webhook `FLOW_RESPONSE`)
+
+Quando o contato envia o flow, a resposta chega no webhook cadastrado assinando o evento **Resposta de Flow (`FLOW_RESPONSE`)**:
+
+```json
+{
+  "event": "FLOW_RESPONSE",
+  "data": {
+    "message": {
+      "type": "flow_response",
+      "content": {
+        "flowResponse": {
+          "flowToken": "123456789012345:tz4a98xxat96iws9zmbrgj3a",
+          "fields": {
+            "agendamentoId": "AG-1024",
+            "horario": "2026-11-03T14:00",
+            "observacao": "Prefiro atendimento presencial"
+          },
+          "metadata": { "agendamentoId": "AG-1024", "clienteId": "c_789" }
+        }
+      }
+    }
+  }
+}
+```
+
+### Lendo a resposta
+
+- `fields` → os campos enviados no submit do flow, com os **nomes definidos no seu flow**. Em seleções (`Dropdown`, `RadioButtonsGroup`), o valor é o **`id`** da opção escolhida (ex.: `horario` = `2026-11-03T14:00`).
+- `metadata` → **o mesmo `metadata` que você enviou** no disparo, herdado automaticamente. Use para correlacionar a resposta com o registro no seu sistema sem depender do telefone.
+- `flowToken` → identificador **interno** da Manybot (formato `${flowId}:${messageId}`). Você **não precisa** usá-lo.
+
+<Tip>
+Campos opcionais não preenchidos pelo contato chegam **vazios (`""`)**. Para correlacionar, use o `metadata` ou um identificador próprio repassado no `flowData` e devolvido em `fields` (como o `agendamentoId` do exemplo).
+</Tip>

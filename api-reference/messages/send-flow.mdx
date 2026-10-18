@@ -1,0 +1,22 @@
+---
+title: "Send Flow"
+openapi: "POST /messages/send-flow"
+---
+
+Envia um **WhatsApp Flow** diretamente, como mensagem interativa.
+
+<Warning>
+O envio direto de flow só funciona **dentro da janela de 24h** (sessão aberta com o contato). Para disparo **proativo** (como um lembrete ou uma pesquisa), use **[Send Template](/api-reference/messages/send-template)** com um template que tenha botão de Flow.
+</Warning>
+
+## `flowData`
+
+O **dataset completo** do flow, enviado de uma vez. Os dados entram pela **tela de entrada** (a única que o WhatsApp permite pré-preencher no disparo) e, em flows multi-tela, são repassados internamente para as telas seguintes via `navigate` — você **não** divide o `flowData` por tela. Os valores são referenciados no flow via `${data.campo}` e a Meta substitui os placeholders **no momento do envio**. Quando enviar `flowData`, informe também `screen` (a tela de entrada).
+
+## `metadata`
+
+Metadados livres gravados na mensagem para controle/consulta posterior (ex.: `{ "pedidoId": "...", "clienteId": "..." }`).
+
+## Idempotência (`X-Request-Id`)
+
+Mesmo comportamento do [Send Template](/api-reference/messages/send-template#idempot%C3%AAncia-x-request-id): envie um UUID no header `X-Request-Id` para evitar envio duplicado em retries.

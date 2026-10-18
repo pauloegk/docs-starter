@@ -38,7 +38,9 @@
             "description": ""
           }
         },
-        "tags": ["Messages"]
+        "tags": [
+          "Messages"
+        ]
       }
     },
     "/messages/send-media": {
@@ -61,7 +63,9 @@
             "description": ""
           }
         },
-        "tags": ["Messages"]
+        "tags": [
+          "Messages"
+        ]
       }
     },
     "/messages/send-audio": {
@@ -84,7 +88,9 @@
             "description": ""
           }
         },
-        "tags": ["Messages"]
+        "tags": [
+          "Messages"
+        ]
       }
     },
     "/messages/send-template": {
@@ -92,7 +98,19 @@
         "operationId": "MessageController_sendTemplateMessage",
         "summary": "Enviar template de mensagem",
         "description": "Envia um template aprovado na Meta. O backend busca a estrutura do template automaticamente e monta os parâmetros (components) a partir dos valores informados.",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "X-Request-Id",
+            "in": "header",
+            "required": false,
+            "description": "Chave de idempotência gerada pelo integrador para evitar disparo duplicado da mesma mensagem em caso de retry. Gere um UUID por mensagem lógica e reenvie o mesmo valor se precisar repetir a requisição. A chave é única por canal (`channelId`). Se não for um UUID válido, a API responde 400 (`key: \"invalid_request_id\"`). Se omitido, não há deduplicação.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "11111111-1111-4111-8111-111111111111"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "description": "Dados para enviar um template de mensagem aprovado na Meta",
@@ -209,6 +227,16 @@
           }
         },
         "responses": {
+          "200": {
+            "description": "Replay: uma requisição com o mesmo `X-Request-Id` já foi processada com sucesso neste canal. A mensagem não é reenviada e a resposta traz o mesmo resultado da primeira vez (mesmo `wamid`, `chatId` etc.).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendTemplateResponseDto"
+                }
+              }
+            }
+          },
           "201": {
             "description": "Template enviado com sucesso",
             "content": {
@@ -258,9 +286,31 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Já existe uma requisição com o mesmo `X-Request-Id` em processamento neste canal. Tente novamente em instantes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 409
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "request_in_progress"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
-        "tags": ["Messages"]
+        "tags": [
+          "Messages"
+        ]
       }
     },
     "/channels": {
@@ -304,7 +354,9 @@
             }
           }
         },
-        "tags": ["Channels"]
+        "tags": [
+          "Channels"
+        ]
       }
     },
     "/channels/connect-whatsapp": {
@@ -376,7 +428,9 @@
             }
           }
         },
-        "tags": ["Channels"]
+        "tags": [
+          "Channels"
+        ]
       }
     },
     "/channels/{id}": {
@@ -448,7 +502,146 @@
             }
           }
         },
-        "tags": ["Channels"]
+        "tags": [
+          "Channels"
+        ]
+      }
+    },
+    "/messages/send-flow": {
+      "post": {
+        "operationId": "sendFlow",
+        "summary": "Enviar Flow",
+        "description": "Envia um WhatsApp Flow diretamente (mensagem interativa). Para disparo proativo fora da janela de 24h, use send-template com um template que tenha botão de Flow.",
+        "parameters": [
+          {
+            "name": "X-Request-Id",
+            "in": "header",
+            "required": false,
+            "description": "Chave de idempotência gerada pelo integrador para evitar disparo duplicado da mesma mensagem em caso de retry. Gere um UUID por mensagem lógica e reenvie o mesmo valor se precisar repetir a requisição. A chave é única por canal (`channelId`). Se não for um UUID válido, a API responde 400 (`key: \"invalid_request_id\"`). Se omitido, não há deduplicação.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "11111111-1111-4111-8111-111111111111"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Dados para enviar um WhatsApp Flow",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendFlowRequestDto"
+              },
+              "examples": {
+                "Flow com dados": {
+                  "summary": "Flow com flowData",
+                  "value": {
+                    "channelId": "clh1234567890",
+                    "phone": "+5511999999999",
+                    "flowId": "123456789012345",
+                    "body": "Toque para escolher seu horário",
+                    "flowCta": "Agendar",
+                    "screen": "AGENDAMENTO",
+                    "flowData": {
+                      "agendamentoId": "AG-1024",
+                      "nome": "Maria"
+                    },
+                    "metadata": {
+                      "agendamentoId": "AG-1024",
+                      "clienteId": "c_789"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Replay: uma requisição com o mesmo `X-Request-Id` já foi processada com sucesso neste canal. A mensagem não é reenviada e a resposta traz o mesmo resultado da primeira vez (mesmo `wamid`, `chatId` etc.).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendTemplateResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Template enviado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendTemplateResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Template não está aprovado ou dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Template \"meu_template\" não está aprovado (status: REJECTED)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template não encontrado na Meta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Template \"meu_template\" (pt_BR) não encontrado"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Já existe uma requisição com o mesmo `X-Request-Id` em processamento neste canal. Tente novamente em instantes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 409
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "request_in_progress"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Messages"
+        ]
       }
     }
   },
@@ -481,7 +674,11 @@
             "example": "+5511999999999"
           }
         },
-        "required": ["channelId", "message", "phone"]
+        "required": [
+          "channelId",
+          "message",
+          "phone"
+        ]
       },
       "SendMediaRequestDto": {
         "type": "object",
@@ -504,7 +701,11 @@
           "mediatype": {
             "type": "string",
             "description": "Tipo da mídia",
-            "enum": ["image", "document", "video"],
+            "enum": [
+              "image",
+              "document",
+              "video"
+            ],
             "example": "image"
           },
           "caption": {
@@ -523,7 +724,12 @@
             "example": "image/jpeg"
           }
         },
-        "required": ["channelId", "phone", "mediaUrl", "mediatype"]
+        "required": [
+          "channelId",
+          "phone",
+          "mediaUrl",
+          "mediatype"
+        ]
       },
       "SendAudioRequestDto": {
         "type": "object",
@@ -544,7 +750,11 @@
             "example": "https://cdn.seudominio.com/audio.mp3"
           }
         },
-        "required": ["channelId", "phone", "audioUrl"]
+        "required": [
+          "channelId",
+          "phone",
+          "audioUrl"
+        ]
       },
       "QrCodeInterface": {
         "type": "object",
@@ -555,7 +765,9 @@
             "example": "iVBORw0KGgoAAAANSUhEUgAA..."
           }
         },
-        "required": ["base64"]
+        "required": [
+          "base64"
+        ]
       },
       "ChannelResponseDTO": {
         "type": "object",
@@ -579,13 +791,23 @@
             "type": "string",
             "description": "Status da conexão do canal",
             "example": "connected",
-            "enum": ["open", "close", "connecting", "refused", "qrcode_limit_scan"]
+            "enum": [
+              "open",
+              "close",
+              "connecting",
+              "refused",
+              "qrcode_limit_scan"
+            ]
           },
           "type": {
             "type": "string",
             "description": "Tipo do canal",
             "example": "whatsapp",
-            "enum": ["whatsapp", "telegram", "instagram"]
+            "enum": [
+              "whatsapp",
+              "telegram",
+              "instagram"
+            ]
           },
           "createdAt": {
             "format": "date-time",
@@ -612,7 +834,13 @@
             "example": "ABC123XYZ"
           }
         },
-        "required": ["id", "companyId", "connectionStatus", "type", "createdAt"]
+        "required": [
+          "id",
+          "companyId",
+          "connectionStatus",
+          "type",
+          "createdAt"
+        ]
       },
       "SendTemplateRequestDto": {
         "type": "object",
@@ -652,9 +880,33 @@
           "header": {
             "description": "Mídia do header do template. Informe apenas um dos campos: imageUrl, videoUrl ou documentUrl.",
             "$ref": "#/components/schemas/TemplateHeaderDto"
+          },
+          "flowData": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Dados iniciais do flow quando o template tem um botão de Flow. Alimentam a 1ª tela do flow (referenciados via ${data.campo}). Use para disparar um WhatsApp Flow de forma proativa via template.",
+            "example": {
+              "agendamentoId": "AG-1024",
+              "nome": "Maria",
+              "servico": "Consulta de rotina"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Metadados livres do integrador, gravados na mensagem para controle/consulta posterior (ex.: id do pedido, id do cliente).",
+            "example": {
+              "pedidoId": "PED-5521",
+              "clienteId": "c_789"
+            }
           }
         },
-        "required": ["channelId", "phone", "templateName", "language"]
+        "required": [
+          "channelId",
+          "phone",
+          "templateName",
+          "language"
+        ]
       },
       "TemplateHeaderDto": {
         "type": "object",
@@ -711,7 +963,12 @@
             "example": "Template enviado com sucesso"
           }
         },
-        "required": ["success", "chatId", "externalChatId", "message"]
+        "required": [
+          "success",
+          "chatId",
+          "externalChatId",
+          "message"
+        ]
       },
       "ConnectWhatsappDto": {
         "type": "object",
@@ -722,6 +979,75 @@
             "example": "+5511999999999"
           }
         }
+      },
+      "SendFlowRequestDto": {
+        "type": "object",
+        "properties": {
+          "channelId": {
+            "type": "string",
+            "description": "ID do canal para envio.",
+            "example": "clh1234567890"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Número do destinatário (formato internacional).",
+            "example": "+5511999999999"
+          },
+          "flowId": {
+            "type": "string",
+            "description": "ID do WhatsApp Flow a enviar.",
+            "example": "123456789012345"
+          },
+          "body": {
+            "type": "string",
+            "description": "Texto do corpo da mensagem que acompanha o botão do flow.",
+            "example": "Toque para escolher seu horário"
+          },
+          "flowCta": {
+            "type": "string",
+            "description": "Rótulo do botão que abre o flow (CTA). Recomendado < 30 caracteres.",
+            "example": "Agendar"
+          },
+          "screen": {
+            "type": "string",
+            "description": "Tela inicial do flow. Obrigatória quando enviar flowData.",
+            "example": "AGENDAMENTO"
+          },
+          "flowData": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Dados iniciais para pré-preencher a 1ª tela (referenciados via ${data.campo}).",
+            "example": {
+              "agendamentoId": "AG-1024",
+              "nome": "Maria"
+            }
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "description": "draft (teste) ou published (padrão).",
+            "example": "published"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Metadados livres gravados na mensagem (ex.: id do pedido, id do cliente).",
+            "example": {
+              "pedidoId": "PED-5521",
+              "clienteId": "c_789"
+            }
+          }
+        },
+        "required": [
+          "channelId",
+          "phone",
+          "flowId",
+          "body",
+          "flowCta"
+        ]
       }
     }
   }

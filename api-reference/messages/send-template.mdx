@@ -2,3 +2,96 @@
 title: "Send Template"
 openapi: "POST /messages/send-template"
 ---
+
+## Idempotência (`X-Request-Id`)
+
+Envie o header opcional `X-Request-Id` para evitar o disparo duplicado da mesma mensagem quando você precisar repetir uma requisição (retry). O valor é uma chave de idempotência gerada por você e deve ser um UUID válido.
+
+| Header | Tipo | Obrigatório | Descrição |
+| --- | --- | --- | --- |
+| `X-Request-Id` | string (UUID) | Não | Chave de idempotência gerada pelo integrador. Gere um UUID por mensagem lógica e reenvie o mesmo valor se precisar repetir a requisição. |
+
+### Exemplo de requisição
+
+```bash
+curl -X POST https://api-v2.manybot.com.br/messages/send-template \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "X-Request-Id: 11111111-1111-4111-8111-111111111111" \
+  -d '{
+    "channelId": "clh1234567890",
+    "phone": "+5511999999999",
+    "templateName": "confirmacao_pedido",
+    "language": "pt_BR",
+    "params": {
+      "contact_first_name": "João"
+    }
+  }'
+```
+
+### Comportamento
+
+| Situação | Resposta |
+| --- | --- |
+| Header não enviado | O endpoint funciona exatamente como antes, sem deduplicação. |
+| Header enviado com valor que não é um UUID válido | `400` com `key: "invalid_request_id"`. |
+| Já existe uma requisição com o mesmo `X-Request-Id` processada com sucesso | `200` com o mesmo resultado da primeira vez (mesmo `wamid`, `chatId` etc.). A mensagem **não** é enviada novamente (replay). |
+| Já existe uma requisição com o mesmo `X-Request-Id` ainda em processamento | `409` com `error: "request_in_progress"`. Tente novamente em instantes. |
+| A tentativa anterior com o mesmo `X-Request-Id` falhou | A falha libera a chave: a nova requisição envia a mensagem de fato. |
+
+<Note>
+A chave é única por canal (`channelId`). O mesmo `X-Request-Id` usado em canais diferentes é tratado como envios distintos.
+</Note>
+
+<Info>
+O header é 100% retrocompatível: integrações que não enviam `X-Request-Id` continuam funcionando sem nenhuma alteração.
+</Info>
+
+### Boas práticas
+
+<Tip>
+- Gere um UUID novo para cada mensagem lógica.
+- Em caso de erro de rede, timeout ou resposta `5xx`, repita a requisição com o **mesmo** `X-Request-Id`. Assim, se a mensagem já tiver sido enviada, você recebe o resultado original em vez de um envio duplicado.
+</Tip>
+
+## Metadados (`metadata`)
+
+Você pode anexar metadados livres à mensagem para controle/consulta posterior (ex.: id do pedido, id do cliente). São gravados na mensagem e não aparecem para o destinatário.
+
+```json
+"metadata": { "pedidoId": "PED-5521", "clienteId": "c_789" }
+```
+
+<Tip>
+O `metadata` também é aceito no `send-flow`. Use-o para rastrear de qual processo/registro a mensagem veio.
+</Tip>
+
+## Disparar um Flow via template (`flowData`)
+
+Para enviar um **WhatsApp Flow de forma proativa** (fora da janela de 24h), use um **template aprovado que tenha um botão de Flow** e passe os dados iniciais em `flowData`. O backend localiza o botão de Flow no template, gera o `flow_token` e injeta os dados — você **não** precisa informar `flowId` nem montar o botão.
+
+```json
+{
+  "channelId": "clh1234567890",
+  "phone": "+5511999999999",
+  "templateName": "agendamento_consulta",
+  "language": "pt_BR",
+  "params": { "contact_first_name": "Maria" },
+  "metadata": { "agendamentoId": "AG-1024", "clienteId": "c_789" },
+  "flowData": {
+    "agendamentoId": "AG-1024",
+    "nome": "Maria",
+    "servico": "Consulta de rotina",
+    "horarios": [
+      { "id": "2026-11-03T09:00", "title": "03/11 · 09:00" },
+      { "id": "2026-11-03T14:00", "title": "03/11 · 14:00" }
+    ]
+  }
+}
+```
+
+<Note>
+`flowData` é o **dataset completo** do flow, enviado de uma vez. Os dados entram pela **tela de entrada** (único ponto que o WhatsApp permite pré-preencher no disparo) e, em flows multi-tela, são repassados internamente para as telas seguintes — você não divide o `flowData` por tela. O flow é apenas um molde com placeholders `${data.campo}` — a Meta substitui cada placeholder pelo valor enviado em `flowData` **no momento do envio** (o `__example__` do flow serve só para o preview do Builder, não para produção). Portanto o `flowData` precisa ter a **estrutura exata** que o flow espera.
+</Note>
+
+Como montar o `flowData` e receber a resposta do flow está detalhado em **[Flows via Template](/api-reference/messages/flows-via-template)**.

@@ -26,7 +26,9 @@
               "api-reference/messages/send-text",
               "api-reference/messages/send-media",
               "api-reference/messages/send-audio",
-              "api-reference/messages/send-template"
+              "api-reference/messages/send-template",
+              "api-reference/messages/send-flow",
+              "api-reference/messages/flows-via-template"
             ]
           },
           {
