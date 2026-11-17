@@ -21,7 +21,19 @@
     "/messages/send-text": {
       "post": {
         "operationId": "MessageController_sendTextMessage",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "X-Request-Id",
+            "in": "header",
+            "required": false,
+            "description": "Chave de idempotência gerada pelo integrador para evitar disparo duplicado da mesma mensagem em caso de retry. Gere um UUID por mensagem lógica e reenvie o mesmo valor se precisar repetir a requisição. A chave é única por canal (`channelId`). Se não for um UUID válido, a API responde 400 (`key: \"invalid_request_id\"`). Se omitido, não há deduplicação.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "11111111-1111-4111-8111-111111111111"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "description": "Dados para enviar uma mensagem de texto",
@@ -35,7 +47,76 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Mensagem enviada. Com `X-Request-Id` já processado com sucesso, devolve a mesma resposta da primeira vez sem enviar de novo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "example": "clh0987654321"
+                    },
+                    "externalChatId": {
+                      "type": "string",
+                      "example": "5511999999999"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Mensagem enviada com sucesso"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos, canal não encontrado ou `X-Request-Id` que não é um UUID válido (`key: \"invalid_request_id\"`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 400
+                    },
+                    "key": {
+                      "type": "string",
+                      "example": "invalid_request_id"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "O header X-Request-Id deve ser um UUID válido"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Já existe uma requisição com o mesmo `X-Request-Id` em processamento neste canal. Tente novamente em instantes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number",
+                      "example": 409
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "request_in_progress"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -950,7 +1031,7 @@
           "externalChatId": {
             "type": "string",
             "description": "ID externo do chat (número do WhatsApp).",
-            "example": "5511999999999@s.whatsapp.net"
+            "example": "5511999999999"
           },
           "wamid": {
             "type": "string",

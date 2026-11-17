@@ -2,3 +2,51 @@
 title: 'Send Text Message'
 openapi: 'POST /messages/send-text'
 ---
+
+## Idempotência (`X-Request-Id`)
+
+Envie o header opcional `X-Request-Id` para evitar o disparo duplicado do mesmo texto quando você precisar repetir uma requisição (retry). O valor é uma chave de idempotência gerada por você e deve ser um UUID válido. É a mesma regra do [Send Template](/api-reference/messages/send-template) e do [Send Flow](/api-reference/messages/send-flow).
+
+| Header | Tipo | Obrigatório | Descrição |
+| --- | --- | --- | --- |
+| `X-Request-Id` | string (UUID) | Não | Chave de idempotência gerada pelo integrador. Gere um UUID por mensagem lógica e reenvie o mesmo valor se precisar repetir a requisição. |
+
+### Exemplo de requisição
+
+```bash
+curl -X POST https://api-v2.manybot.com.br/messages/send-text \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "X-Request-Id: 11111111-1111-4111-8111-111111111111" \
+  -d '{
+    "channelId": "clh1234567890",
+    "phone": "+5511999999999",
+    "message": "Olá! Sua consulta está confirmada para amanhã às 14h."
+  }'
+```
+
+### Comportamento
+
+| Situação | Resposta |
+| --- | --- |
+| Header não enviado | O endpoint funciona exatamente como antes, sem deduplicação. |
+| Header enviado com valor que não é um UUID válido | `400` com `key: "invalid_request_id"`. |
+| Já existe uma requisição com o mesmo `X-Request-Id` processada com sucesso | A mesma resposta da primeira vez (mesmo `chatId`). O texto **não** é enviado novamente (replay). |
+| Já existe uma requisição com o mesmo `X-Request-Id` ainda em processamento | `409` com `error: "request_in_progress"`. Tente novamente em instantes. |
+| A tentativa anterior com o mesmo `X-Request-Id` falhou | A falha libera a chave: a nova requisição envia o texto de fato. |
+
+<Note>
+A chave é única por canal (`channelId`). O mesmo `X-Request-Id` usado em canais diferentes é tratado como envios distintos.
+</Note>
+
+<Info>
+O header é 100% retrocompatível: integrações que não enviam `X-Request-Id` continuam funcionando sem nenhuma alteração.
+</Info>
+
+### Boas práticas
+
+<Tip>
+- Gere um UUID novo para cada mensagem lógica (por exemplo, um por lembrete de consulta).
+- Em caso de erro de rede, timeout ou resposta `5xx`, repita a requisição com o **mesmo** `X-Request-Id`. Assim, se o texto já tiver sido enviado, você recebe o resultado original em vez de um envio duplicado.
+- Não reaproveite a mesma chave para um texto diferente: a requisição repetida devolve o resultado da primeira e o novo texto não é enviado.
+</Tip>
